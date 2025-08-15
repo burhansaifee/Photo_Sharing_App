@@ -2,46 +2,35 @@
 
 import { useEffect, useState } from 'react';
 import { collection, onSnapshot, query, where, doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
-import { db, auth } from '../../firebase/firebaseConfig'; // Import auth
+import { db, auth } from '../../firebase/firebaseConfig';
 import Spinner from '../common/Spinner';
 
 export default function ClientAlbumView({ album, onBack }) {
-  const [images, setImages] = useState([]);
+  const [media, setMedia] = useState([]);
   const [loading, setLoading] = useState(true);
   const currentUser = auth.currentUser;
 
   useEffect(() => {
-    const q = query(collection(db, 'images'), where('albumId', '==', album.id));
+    // FIX 1: Fetching from the correct 'media' collection
+    const q = query(collection(db, 'media'), where('albumId', '==', album.id));
     const unsub = onSnapshot(q, (snap) => {
       const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setImages(list);
+      setMedia(list);
       setLoading(false);
     });
     return () => unsub();
   }, [album.id]);
 
-  const handleDownload = async (imageUrl, filename) => {
-    // Download logic remains the same
-  };
-
-  // --- NEW: Function to handle liking/unliking an image ---
-  const handleLikeToggle = async (imageId, currentLikes) => {
-    if (!currentUser) return; // Make sure user is logged in
-
-    const imageRef = doc(db, 'images', imageId);
+  const handleLikeToggle = async (mediaId, currentLikes) => {
+    if (!currentUser) return;
+    // FIX 2: Referencing the 'media' document for liking
+    const mediaRef = doc(db, 'media', mediaId);
     const userHasLiked = currentLikes?.includes(currentUser.uid);
-
     try {
       if (userHasLiked) {
-        // User has already liked, so "unlike" it
-        await updateDoc(imageRef, {
-          likes: arrayRemove(currentUser.uid)
-        });
+        await updateDoc(mediaRef, { likes: arrayRemove(currentUser.uid) });
       } else {
-        // User has not liked it yet, so "like" it
-        await updateDoc(imageRef, {
-          likes: arrayUnion(currentUser.uid)
-        });
+        await updateDoc(mediaRef, { likes: arrayUnion(currentUser.uid) });
       }
     } catch (error) {
       console.error("Error updating likes:", error);
@@ -49,6 +38,15 @@ export default function ClientAlbumView({ album, onBack }) {
     }
   };
 
+  // FIX 3: Using the reliable direct download URL creator
+  const createDownloadUrl = (mediaUrl, mediaType) => {
+    if (mediaType === 'video') {
+      // For videos, the direct URL works best for download/new tab
+      return mediaUrl;
+    }
+    // For images, this flag forces the browser to download instead of opening
+    return mediaUrl.replace('/upload/', '/upload/fl_attachment/');
+  };
 
   return (
     <div>
@@ -60,26 +58,25 @@ export default function ClientAlbumView({ album, onBack }) {
       {loading ? (
         <div className="spinner-container"><Spinner /></div>
       ) : (
-        <div className="image-grid">
-          {images.length > 0 ? (
-            images.map((image) => {
-              const likes = image.likes || [];
+        <div className="media-grid">
+          {media.length > 0 ? (
+            media.map((item) => {
+              const likes = item.likes || [];
               const userHasLiked = currentUser && likes.includes(currentUser.uid);
-
               return (
-                <div key={image.id} className="card image-card">
-                  <img src={image.imageUrl} alt={image.fileName} />
-                  <div className="image-overlay">
-                    <button onClick={() => handleDownload(image.imageUrl, image.fileName)} className="btn">
+                <div key={item.id} className="card media-card">
+                  {item.mediaType === 'video' ? (
+                    <video controls src={item.mediaUrl} />
+                  ) : (
+                    <img src={item.mediaUrl} alt={item.fileName} />
+                  )}
+                  <div className="media-overlay">
+                    <a href={createDownloadUrl(item.mediaUrl, item.mediaType)} download={item.fileName} className="btn">
                       Download
-                    </button>
+                    </a>
                   </div>
-                  {/* --- NEW: Like button and counter --- */}
                   <div className="like-section">
-                    <button 
-                      onClick={() => handleLikeToggle(image.id, likes)} 
-                      className={`like-button ${userHasLiked ? 'liked' : ''}`}
-                    >
+                    <button onClick={() => handleLikeToggle(item.id, likes)} className={`like-button ${userHasLiked ? 'liked' : ''}`}>
                       ❤️
                     </button>
                     <span className="like-count">{likes.length}</span>

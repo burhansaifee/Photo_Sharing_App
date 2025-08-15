@@ -4,25 +4,36 @@ import { useEffect, useState } from 'react';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/firebaseConfig';
 import Spinner from '../common/Spinner';
-import ImageUploader from './ImageUploader';
+// We'll assume ImageUploader is renamed to MediaUploader
+import MediaUploader from './MediaUploader'; 
 
 export default function AlbumDetailView({ album, onBack }) {
-  const [images, setImages] = useState([]);
+  // 1. State renamed from 'images' to 'media'
+  const [media, setMedia] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, 'images'), where('albumId', '==', album.id));
+    // 2. Query now points to a 'media' collection
+    const q = query(collection(db, 'media'), where('albumId', '==', album.id));
     const unsub = onSnapshot(q, (snap) => {
       const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setImages(list);
+      setMedia(list);
       setLoading(false);
     });
     return () => unsub();
   }, [album.id]);
 
-  const handleDownload = async (imageUrl, filename) => {
+  // 3. Download logic updated to handle both media types
+  const handleDownload = async (mediaUrl, filename, mediaType) => {
+    // For videos, a direct link is often sufficient and more reliable
+    if (mediaType === 'video') {
+      window.open(mediaUrl, '_blank');
+      return;
+    }
+
+    // Existing logic for images
     try {
-      const response = await fetch(imageUrl);
+      const response = await fetch(mediaUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -33,8 +44,8 @@ export default function AlbumDetailView({ album, onBack }) {
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error downloading image:", error);
-      alert("Could not download the image.");
+      console.error("Error downloading media:", error);
+      alert("Could not download the media.");
     }
   };
 
@@ -44,32 +55,36 @@ export default function AlbumDetailView({ album, onBack }) {
         &larr; Back to Albums
       </button>
       <h2 className="page-title">{album.title}</h2>
-      <ImageUploader albumId={album.id} />
+      {/* 4. Using the new MediaUploader component */}
+      <MediaUploader albumId={album.id} />
 
-      <h3 style={{ marginTop: '2.5rem', marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Photos in this Album</h3>
+      <h3 style={{ marginTop: '2.5rem', marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Media in this Album</h3>
 
       {loading ? (
         <div className="spinner-container"><Spinner /></div>
       ) : (
-        <div className="image-grid">
-          {images.length > 0 ? (
-            images.map((image) => {
-              // Get the likes array, default to empty array if it doesn't exist
-              const likes = image.likes || [];
-
+        <div className="media-grid"> {/* Assuming a new class for combined media */}
+          {media.length > 0 ? (
+            media.map((item) => {
+              const likes = item.likes || [];
               return (
-                <div key={image.id} className="card image-card">
-                  <img src={image.imageUrl} alt={image.fileName} />
-                  <div className="image-overlay">
+                <div key={item.id} className="card media-card">
+                  {/* 5. Conditional rendering based on mediaType */}
+                  {item.mediaType === 'video' ? (
+                    <video controls src={item.mediaUrl} style={{ width: '100%', height: '250px', objectFit: 'cover' }} />
+                  ) : (
+                    <img src={item.mediaUrl} alt={item.fileName} />
+                  )}
+                  
+                  <div className="media-overlay">
                     <button
-                      onClick={() => handleDownload(image.imageUrl, image.fileName)}
+                      onClick={() => handleDownload(item.mediaUrl, item.fileName, item.mediaType)}
                       className="btn"
                     >
                       Download
                     </button>
                   </div>
-                  {/* --- NEW: Display Likes for Photographer --- */}
-                  {/* Show the like section only if there is at least one like */}
+                  
                   {likes.length > 0 && (
                     <div className="like-section">
                       <span className="like-button liked">❤️</span>
@@ -80,7 +95,7 @@ export default function AlbumDetailView({ album, onBack }) {
               );
             })
           ) : (
-            <p>No images uploaded yet.</p>
+            <p>No media uploaded yet.</p>
           )}
         </div>
       )}
