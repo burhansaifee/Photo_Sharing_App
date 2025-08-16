@@ -1,6 +1,4 @@
-// src/components/photographer/PhotographerDashboard.jsx
-
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { collection, onSnapshot, query, where, doc, deleteDoc, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/firebaseConfig';
 import Spinner from '../common/Spinner';
@@ -12,6 +10,7 @@ export default function PhotographerDashboard({ user }) {
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedAlbum, setSelectedAlbum] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (!user) return;
@@ -24,14 +23,23 @@ export default function PhotographerDashboard({ user }) {
     return () => unsub();
   }, [user]);
 
+  const filteredAlbums = useMemo(() => {
+    return albums.filter(album =>
+      album.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [albums, searchTerm]);
+
+  const handleCopyPublicLink = (albumId) => {
+    const link = `${window.location.origin}/album/${albumId}`;
+    navigator.clipboard.writeText(link);
+    alert('Public link copied to clipboard!');
+  };
+
   const niceDate = (ts) => {
     if (!ts) return '';
     return ts.toDate ? ts.toDate().toLocaleDateString() : new Date(ts).toLocaleDateString();
   };
-
-  // --- NEW: Function to handle album deletion ---
   const handleDeleteAlbum = async (albumId, albumTitle) => {
-    // 1. Confirm deletion
     const isConfirmed = window.confirm(`Are you sure you want to delete the album "${albumTitle}"? This will also delete all its photo records in the database.`);
 
     if (!isConfirmed) {
@@ -39,17 +47,15 @@ export default function PhotographerDashboard({ user }) {
     }
 
     try {
-      // 2. Delete all image documents associated with the album
-      const imagesQuery = query(collection(db, 'images'), where('albumId', '==', albumId));
+      const imagesQuery = query(collection(db, 'media'), where('albumId', '==', albumId));
       const imageSnapshots = await getDocs(imagesQuery);
       const deletePromises = imageSnapshots.docs.map(doc => deleteDoc(doc.ref));
       await Promise.all(deletePromises);
 
-      // 3. Delete the album document itself
       const albumRef = doc(db, 'albums', albumId);
       await deleteDoc(albumRef);
 
-      alert(`Album "${albumTitle}" and its photo records have been deleted. Note: The actual image files still exist on Cloudinary.`);
+      alert(`Album "${albumTitle}" and its photo records have been deleted.`);
 
     } catch (error) {
       console.error("Error deleting album: ", error);
@@ -57,36 +63,46 @@ export default function PhotographerDashboard({ user }) {
     }
   };
 
+
   if (loading) return <div className="spinner-container"><Spinner /></div>;
   if (selectedAlbum) return <AlbumDetailView album={selectedAlbum} onBack={() => setSelectedAlbum(null)} />;
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <h2 className="page-title" style={{ marginBottom: 0 }}>My Albums</h2>
         <CreateAlbumForm photographerId={user.uid} />
       </div>
 
-      <div className="info-box">
-        Your User ID (share with clients): <strong>{user.uid}</strong>
+      <div className="form-group" style={{ marginBottom: '2rem' }}>
+        <input
+          type="text"
+          placeholder="Search albums..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="form-input"
+        />
       </div>
 
       <div className="album-grid">
-        {albums.length === 0 ? (
-          <p>You haven't created any albums yet.</p>
+        {filteredAlbums.length === 0 ? (
+          <p>No albums found.</p>
         ) : (
-          albums.map((album) => (
+          filteredAlbums.map((album) => (
             <div key={album.id} className="card album-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
+              <div className="album-card-cover" style={{ backgroundImage: `url(${album.coverImage || 'https://via.placeholder.com/400x250/161b22/8b949e?text=No+Cover'})` }}></div>
+              {/* === THE FIX IS HERE === */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                <div style={{ flexGrow: 1 }}>
                   <h3>{album.title}</h3>
                   <p>Created: {niceDate(album.createdAt)}</p>
                 </div>
-                {/* --- NEW: Delete Button --- */}
-                <button 
-                  onClick={() => handleDeleteAlbum(album.id, album.title)}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteAlbum(album.id, album.title);
+                  }}
                   className="btn btn-danger"
-                  style={{ flexShrink: 0, marginLeft: '1rem', width: '30%', height: '30px', padding: 0, fontSize: '1rem' }}
                 >
                   Delete
                 </button>
@@ -97,6 +113,12 @@ export default function PhotographerDashboard({ user }) {
               >
                 View & Manage Album
               </button>
+
+               {album.isPublic && (
+                <button onClick={() => handleCopyPublicLink(album.id)} className="btn" style={{marginTop: '0.5rem'}}>
+                  Share Public Link
+                </button>
+              )}
               <ShareAlbumForm album={album} />
             </div>
           ))

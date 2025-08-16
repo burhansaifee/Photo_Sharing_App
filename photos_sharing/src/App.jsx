@@ -12,6 +12,7 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import PublicAlbumPage from './pages/PublicAlbumPage'; // Import the new page
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 
@@ -23,7 +24,7 @@ const SignOutButton = ({ setIsMenuOpen }) => {
     if (setIsMenuOpen) {
       setIsMenuOpen(false);
     }
-    navigate('/'); // Redirect to landing page on sign out
+    navigate('/');
   };
 
   return (
@@ -101,13 +102,14 @@ export default function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route 
-            path="/dashboard" 
+          <Route path="/album/:albumId" element={<PublicAlbumPage />} /> {/* Add this new route */}
+          <Route
+            path="/dashboard"
             element={
               <ProtectedRoute user={user} loading={loading}>
                 <DashboardPage user={user} userData={userData} />
               </ProtectedRoute>
-            } 
+            }
           />
         </Routes>
       </main>

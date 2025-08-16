@@ -1,16 +1,17 @@
 // src/components/client/ClientDashboard.jsx
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/firebaseConfig';
 import Spinner from '../common/Spinner';
 import ClientAlbumView from './ClientAlbumView';
-import ClientShareAlbumForm from './ClientShareAlbumForm'; // Import the new component
+import ClientShareAlbumForm from './ClientShareAlbumForm';
 
 export default function ClientDashboard({ user }) {
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedAlbum, setSelectedAlbum] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(''); // State for search input
 
   useEffect(() => {
     if (!user) return;
@@ -22,7 +23,13 @@ export default function ClientDashboard({ user }) {
     });
     return () => unsub();
   }, [user]);
-  
+
+  const filteredAlbums = useMemo(() => {
+    return albums.filter(album =>
+      album.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [albums, searchTerm]);
+
   const niceDate = (ts) => {
     if (!ts) return '';
     return ts.toDate ? ts.toDate().toLocaleDateString() : new Date(ts).toLocaleDateString();
@@ -34,17 +41,28 @@ export default function ClientDashboard({ user }) {
   return (
     <div>
       <h2 className="page-title">Albums Shared With You</h2>
-      
+
       <div className="info-box">
         Your User ID (give this to your photographer): <strong>{user.uid}</strong>
       </div>
 
+      <div className="form-group" style={{ margin: '2rem 0' }}>
+        <input
+          type="text"
+          placeholder="Search albums..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="form-input"
+        />
+      </div>
+
       <div className="album-grid">
-        {albums.length === 0 ? (
-          <p>No albums have been shared with you yet.</p>
+        {filteredAlbums.length === 0 ? (
+          <p>No albums found.</p>
         ) : (
-          albums.map((album) => (
+          filteredAlbums.map((album) => (
             <div key={album.id} className="card album-card">
+              <div className="album-card-cover" style={{ backgroundImage: `url(${album.coverImage || 'https://via.placeholder.com/400x250/161b22/8b949e?text=No+Cover'})` }}></div>
               <h3>{album.title}</h3>
               <p>Created: {niceDate(album.createdAt)}</p>
               <button
@@ -53,7 +71,6 @@ export default function ClientDashboard({ user }) {
               >
                 View Album
               </button>
-              {/* Add the sharing form here */}
               <ClientShareAlbumForm album={album} />
             </div>
           ))

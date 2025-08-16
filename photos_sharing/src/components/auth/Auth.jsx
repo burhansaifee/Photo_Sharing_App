@@ -4,10 +4,10 @@ import { useState } from 'react';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  GoogleAuthProvider, // Import Google provider
-  signInWithPopup,      // Import function for pop-up sign-in
+  GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth';
-import { setDoc, doc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../firebase/firebaseConfig';
 import MessageBox from '../common/MessageBox';
 import './Auth.css';
@@ -17,11 +17,13 @@ export default function AuthComponent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('client');
+  const [photographerKey, setPhotographerKey] = useState(''); // New state for the key
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
+  // --- This is your secret key. Change it to something secure! ---
+  const SECRET_KEY = 'Burhan@saifee';
 
-  // --- NEW: Simplified function to handle Google Sign-In ---
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
@@ -32,11 +34,17 @@ export default function AuthComponent() {
     }
   };
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setMessage('');
+
+    // --- Key validation for photographers ---
+    if (isSignUp && role === 'photographer' && photographerKey !== SECRET_KEY) {
+      setError('Invalid Photographer Key. Please contact support if you are a photographer.');
+      return;
+    }
+
     try {
       if (isSignUp) {
         const userCred = await createUserWithEmailAndPassword(auth, email, password);
@@ -63,13 +71,10 @@ export default function AuthComponent() {
         {message && <MessageBox message={message} type="success" onClose={() => setMessage('')} />}
         {error && <MessageBox message={error} type="error" onClose={() => setError('')} />}
 
-        <h2 className="auth-title">
-          <h2 className="auth-title">{isSignUp ? 'Create Account' : 'Sign In'}</h2>
-        </h2>
+        <h2 className="auth-title">{isSignUp ? 'Create Account' : 'Sign In'}</h2>
 
-        {/* --- NEW: Google Sign-In Button --- */}
-        <button 
-          onClick={handleGoogleSignIn} 
+        <button
+          onClick={handleGoogleSignIn}
           className="btn-google"
         >
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google icon" />
@@ -106,17 +111,35 @@ export default function AuthComponent() {
           </div>
 
           {isSignUp && (
-            <div className="form-group">
-              <label className="form-label">I am a:</label>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="form-select"
-              >
-                <option value="client">Client</option>
-                <option value="photographer">Photographer</option>
-              </select>
-            </div>
+            <>
+              <div className="form-group">
+                <label className="form-label">I am a:</label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="form-select"
+                >
+                  <option value="client">Client</option>
+                  <option value="photographer">Photographer</option>
+                </select>
+              </div>
+
+              {/* --- New field for the photographer key --- */}
+              {role === 'photographer' && (
+                <div className="form-group">
+                  <label className="form-label" htmlFor="photographerKey">Photographer Key</label>
+                  <input
+                    type="password"
+                    id="photographerKey"
+                    value={photographerKey}
+                    onChange={(e) => setPhotographerKey(e.target.value)}
+                    className="form-input"
+                    placeholder="Enter registration key"
+                    required
+                  />
+                </div>
+              )}
+            </>
           )}
 
           <button type="submit" className="btn btn-accent">

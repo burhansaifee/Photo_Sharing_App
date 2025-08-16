@@ -68,9 +68,13 @@ body {
   text-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
 }
 .navbar-links {
-  list-style: none;
   display: flex;
   align-items: center;
+  gap: 2rem;
+}
+.navbar-links ul {
+  list-style: none;
+  display: flex;
   gap: 2rem;
   margin: 0;
   padding: 0;
@@ -83,7 +87,9 @@ body {
   border-bottom: 2px solid transparent;
   transition: all 0.2s;
 }
-.nav-link:hover { color: var(--primary-glow); }
+.nav-link:hover {
+  color: var(--primary-glow);
+}
 .nav-link.active {
   color: var(--primary-glow);
   border-bottom-color: var(--primary-glow);
@@ -111,26 +117,19 @@ body {
   font-weight: 500;
 }
 .navbar-menu-icon {
-  display: none; /* Hidden on desktop */
+  display: none;
   font-size: 1.8rem;
   cursor: pointer;
   color: var(--text-primary);
 }
 
-/* This container holds links and actions for responsive behavior */
-.navbar-collapse {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-}
-
 /* --- Responsive Styles --- */
 @media (max-width: 850px) {
   .navbar-menu-icon {
-    display: block; /* Show hamburger */
+    display: block;
   }
-  .navbar-collapse {
-    display: none; /* Hide links and actions by default on mobile */
+  .navbar-links {
+    display: none;
     flex-direction: column;
     align-items: center;
     gap: 1.5rem;
@@ -142,40 +141,17 @@ body {
     padding: 2rem;
     border-bottom: 1px solid var(--border-color);
   }
-  .navbar-collapse.active {
-    display: flex; /* Show when menu is open */
+  .navbar-links.active {
+    display: flex;
   }
-  .navbar-links {
+  .navbar-links ul {
     flex-direction: column;
     width: 100%;
     text-align: center;
   }
-}
-
-.navbar-links ul {
-  list-style: none;
-  display: flex;
-  gap: 2rem;
-  margin: 0;
-  padding: 0;
-}
-.nav-link {
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-weight: 500;
-  padding: 0.5rem 0;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-}
-.nav-link:hover {
-  color: var(--primary-glow);
-}
-.nav-link.active {
-  color: var(--primary-glow);
-  border-bottom-color: var(--primary-glow);
-}
-.navbar-actions {
-  margin-left: 2rem;
+  .navbar-actions {
+    margin-left: 0;
+  }
 }
 
 /* --- Buttons --- */
@@ -270,7 +246,7 @@ body {
 }
 
 /* --- Album & Image Grids --- */
-.album-grid, .image-grid {
+.album-grid, .media-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
@@ -313,10 +289,8 @@ body {
   border-top: 3px solid var(--primary-accent);
 }
 
-
-
 /* --- Like Button Styles --- */
-.image-card {
+.media-card {
   position: relative; /* Needed for positioning the like section */
 }
 
@@ -358,11 +332,7 @@ body {
   color: var(--text-primary);
 }
 
-/* src/index.css */
-
-/* ... (add this to the end of the file) ... */
-
-.image-overlay {
+.media-overlay {
     position: absolute;
     inset: 0;
     background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
@@ -373,17 +343,17 @@ body {
     opacity: 0;
     transition: opacity 0.3s ease;
 }
-.image-card:hover .image-overlay {
+.media-card:hover .media-overlay {
     opacity: 1;
 }
-.image-card img {
+.media-card img {
     width: 100%;
     height: 250px;
     object-fit: cover;
     display: block;
     transition: transform 0.3s ease;
 }
-.image-card:hover img {
+.media-card:hover img {
     transform: scale(1.1);
 }
 
@@ -433,4 +403,76 @@ body {
   margin-bottom: 1.5rem;
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 0.5rem;
+}
+
+.album-card-cover {
+  width: 100%;
+  height: 150px;
+  background-size: cover;
+  background-position: center;
+  border-radius: var(--radius) var(--radius) 0 0;
+  margin: -1.5rem -1.5rem 1rem -1.5rem; /* Pull up to the card edge */
+  border-bottom: 1px solid var(--border-color);
+}
+
+.cover-image-border {
+  border: 2px solid var(--primary-glow);
+  box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.media-overlay .btn {
+  margin: 0 0.25rem; /* Add some space between buttons in overlay */
+}
+
+.create-album-btn {
+  font-size: 1rem;
+  padding: 0.8rem 1.5rem;
+}
+
+/* --- Modal Styles --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background-color: var(--background-panel);
+  padding: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  color: var(--primary-glow);
+  margin-bottom: 1.5rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn.btn-secondary {
+  border-color: var(--text-secondary);
+  color: var(--text-secondary);
+}
+
+.btn.btn-secondary:hover {
+  background-color: var(--text-secondary);
+  color: var(--background-dark);
 }
