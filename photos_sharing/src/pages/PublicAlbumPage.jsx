@@ -14,23 +14,27 @@ export default function PublicAlbumPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
+ useEffect(() => {
     const fetchAlbum = async () => {
       try {
         const albumRef = doc(db, 'albums', albumId);
         const albumSnap = await getDoc(albumRef);
 
-        if (albumSnap.exists() && albumSnap.data().isPublic) {
-          setAlbum({ id: albumSnap.id, ...albumSnap.data() });
-          // If no password, user is authenticated
-          if (!albumSnap.data().password) {
-            setIsAuthenticated(true);
+        if (albumSnap.exists()) {
+          if (albumSnap.data().isPublic) {
+            setAlbum({ id: albumSnap.id, ...albumSnap.data() });
+            if (!albumSnap.data().password) {
+              setIsAuthenticated(true);
+            }
+          } else {
+            setError('This album is not public.');
           }
         } else {
-          setError('This album is not public or does not exist.');
+          setError('This album does not exist.');
         }
       } catch (err) {
-        setError('Failed to load album.');
+        console.error("Error fetching album:", err);
+        setError('Failed to load album. Please check your Firestore security rules.');
       } finally {
         setLoading(false);
       }
