@@ -6,21 +6,23 @@
   justify-content: center;
   min-height: calc(100vh - 100px); /* Adjust based on header height */
   padding: 2rem;
+  background-color: var(--background-panel);
 }
 
 .auth-box {
-  background: var(--background-white);
-  padding: 2rem;
+  background: var(--background-light);
+  padding: 2.5rem;
   border-radius: var(--radius);
   box-shadow: var(--shadow-lg);
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   animation: auth-fade-in 0.4s ease-out;
+  border-top: 4px solid var(--primary-accent);
 }
 
 .auth-title {
   text-align: center;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 1.75rem;
   margin-bottom: 1.5rem;
 }
@@ -40,7 +42,7 @@
 .auth-toggle-btn {
   background: none;
   border: none;
-  color: var(--accent-color);
+  color: var(--primary-accent);
   font-weight: 600;
   cursor: pointer;
   padding: 0;
@@ -58,9 +60,9 @@
 .btn-google {
   width: 100%;
   padding: 0.7rem;
-  background-color: #4285F4;
-  color: white;
-  border: none;
+  background-color: #fff;
+  color: #444;
+  border: 1px solid var(--border-color);
   border-radius: var(--radius);
   font-size: 1rem;
   font-weight: 600;
@@ -69,21 +71,18 @@
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, box-shadow 0.2s;
   box-shadow: var(--shadow-sm);
 }
 
 .btn-google:hover {
-  background-color: #357ae8;
+  background-color: #f8f9fa;
   box-shadow: var(--shadow-md);
 }
 
 .btn-google img {
   width: 20px;
   height: 20px;
-  background-color: white;
-  border-radius: 50%;
-  padding: 2px;
 }
 
 .auth-divider {

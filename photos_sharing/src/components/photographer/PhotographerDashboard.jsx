@@ -1,3 +1,5 @@
+// src/components/photographer/PhotographerDashboard.jsx
+
 import { useEffect, useState, useMemo } from 'react';
 import { collection, onSnapshot, query, where, doc, deleteDoc, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/firebaseConfig';
@@ -5,6 +7,7 @@ import Spinner from '../common/Spinner';
 import CreateAlbumForm from './CreateAlbumForm';
 import ShareAlbumForm from './ShareAlbumForm';
 import AlbumDetailView from './AlbumDetailView';
+import './PhotographerDashboard.css';
 
 export default function PhotographerDashboard({ user }) {
   const [albums, setAlbums] = useState([]);
@@ -68,58 +71,61 @@ export default function PhotographerDashboard({ user }) {
   if (selectedAlbum) return <AlbumDetailView album={selectedAlbum} onBack={() => setSelectedAlbum(null)} />;
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <h2 className="page-title" style={{ marginBottom: 0 }}>My Albums</h2>
+    <div className="dashboard-container">
+      <div className="dashboard-header">
+        <h2 className="page-title">My Albums</h2>
         <CreateAlbumForm photographerId={user.uid} />
       </div>
 
-      <div className="form-group" style={{ marginBottom: '2rem' }}>
+      <div className="dashboard-controls">
         <input
           type="text"
           placeholder="Search albums..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="form-input"
+          className="form-input search-input"
         />
       </div>
 
       <div className="album-grid">
         {filteredAlbums.length === 0 ? (
-          <p>No albums found.</p>
+          <div className="empty-state">
+            <h3>No albums found.</h3>
+            <p>Click "Create New Album" to get started.</p>
+          </div>
         ) : (
           filteredAlbums.map((album) => (
             <div key={album.id} className="card album-card">
-              <div className="album-card-cover" style={{ backgroundImage: `url(${album.coverImage || 'https://via.placeholder.com/400x250/161b22/8b949e?text=No+Cover'})` }}></div>
-              {/* === THE FIX IS HERE === */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                <div style={{ flexGrow: 1 }}>
-                  <h3>{album.title}</h3>
-                  <p>Created: {niceDate(album.createdAt)}</p>
+              <div className="album-card-cover" style={{ backgroundImage: `url(${album.coverImage || 'https://via.placeholder.com/400x250/f8f9fa/6c757d?text=No+Cover'})` }}></div>
+              <div className="album-card-body">
+                <h3>{album.title}</h3>
+                <p className="album-meta">Created: {niceDate(album.createdAt)}</p>
+                <div className="album-actions">
+                    <button
+                        onClick={() => setSelectedAlbum(album)}
+                        className="btn btn-primary"
+                    >
+                        View & Manage
+                    </button>
+                    <button
+                        onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteAlbum(album.id, album.title);
+                        }}
+                        className="btn btn-danger"
+                    >
+                        Delete
+                    </button>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteAlbum(album.id, album.title);
-                  }}
-                  className="btn btn-danger"
-                >
-                  Delete
-                </button>
+                <div className="share-section">
+                    {album.isPublic && (
+                        <button onClick={() => handleCopyPublicLink(album.id)} className="btn btn-secondary">
+                        Share Public Link
+                        </button>
+                    )}
+                    <ShareAlbumForm album={album} />
+                </div>
               </div>
-              <button
-                onClick={() => setSelectedAlbum(album)}
-                className="btn btn-primary"
-              >
-                View & Manage Album
-              </button>
-
-               {album.isPublic && (
-                <button onClick={() => handleCopyPublicLink(album.id)} className="btn" style={{marginTop: '0.5rem'}}>
-                  Share Public Link
-                </button>
-              )}
-              <ShareAlbumForm album={album} />
             </div>
           ))
         )}

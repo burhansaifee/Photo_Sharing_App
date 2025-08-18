@@ -62,6 +62,16 @@ export default function PublicAlbumPage() {
     }
   };
 
+  const createDownloadUrl = (mediaUrl) => {
+    // For Cloudinary, appending `fl_attachment` prompts a download.
+    // This might need adjustment for other storage providers.
+    if (mediaUrl.includes('cloudinary')) {
+      return mediaUrl.replace('/upload/', '/upload/fl_attachment/');
+    }
+    return mediaUrl;
+  };
+
+
   if (loading) return <div className="spinner-container"><Spinner /></div>;
   if (error) return <p>{error}</p>;
   if (!album) return <p>Album not found.</p>;
@@ -82,6 +92,11 @@ export default function PublicAlbumPage() {
         {photos.length > 0 ? photos.map(item => (
           <div key={item.id} className="card media-card">
             <img src={item.mediaUrl} alt={item.fileName} />
+            <div className="media-overlay">
+              <a href={createDownloadUrl(item.mediaUrl)} download={item.fileName} className="btn">
+                Download
+              </a>
+            </div>
           </div>
         )) : <p>No photos in this album.</p>}
       </div>
@@ -92,6 +107,11 @@ export default function PublicAlbumPage() {
         {videos.length > 0 ? videos.map(item => (
           <div key={item.id} className="card media-card">
             <video controls src={item.mediaUrl} />
+            <div className="media-overlay">
+                <a href={createDownloadUrl(item.mediaUrl)} download={item.fileName} className="btn">
+                    Download
+                </a>
+            </div>
           </div>
         )) : <p>No videos in this album.</p>}
       </div>

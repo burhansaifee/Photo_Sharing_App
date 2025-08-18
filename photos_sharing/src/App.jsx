@@ -1,20 +1,18 @@
 // src/App.jsx
 
 import { useEffect, useState } from 'react';
-import { Routes, Route, Link, NavLink, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './firebase/firebaseConfig';
+import { scroller } from 'react-scroll';
 
 // Import Page Components
 import LandingPage from './pages/LandingPage';
-import AboutPage from './pages/AboutPage';
-import ContactPage from './pages/ContactPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
-import PublicAlbumPage from './pages/PublicAlbumPage'; // Import the new page
+import PublicAlbumPage from './pages/PublicAlbumPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
-
 
 const SignOutButton = ({ setIsMenuOpen }) => {
   const navigate = useNavigate();
@@ -33,6 +31,44 @@ const SignOutButton = ({ setIsMenuOpen }) => {
     </button>
   );
 };
+
+// Custom NavLink for scrolling
+const NavScrollLink = ({ to, children, setIsMenuOpen }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleClick = () => {
+    setIsMenuOpen(false);
+    // If we're not on the homepage, navigate there first
+    if (location.pathname !== '/') {
+      navigate('/');
+      // Wait for navigation to happen before trying to scroll
+      setTimeout(() => {
+        scroller.scrollTo(to, {
+          duration: 800,
+          delay: 0,
+          smooth: 'easeInOutQuart',
+          offset: -70, // Offset for fixed navbar
+        });
+      }, 100);
+    } else {
+      // If we're already on the homepage, just scroll
+      scroller.scrollTo(to, {
+        duration: 800,
+        delay: 0,
+        smooth: 'easeInOutQuart',
+        offset: -70,
+      });
+    }
+  };
+
+  return (
+    <a onClick={handleClick} className="nav-link" style={{ cursor: 'pointer' }}>
+      {children}
+    </a>
+  );
+};
+
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -74,10 +110,10 @@ export default function App() {
           <div className="navbar-menu-icon" onClick={() => setIsMenuOpen(!isMenuOpen)}>&#9776;</div>
           <div className={`navbar-links ${isMenuOpen ? 'active' : ''}`}>
             <ul>
-              <li><NavLink to="/" className="nav-link" onClick={() => setIsMenuOpen(false)}>Home</NavLink></li>
-              {user && <li><NavLink to="/dashboard" className="nav-link" onClick={() => setIsMenuOpen(false)}>Dashboard</NavLink></li>}
-              <li><NavLink to="/about" className="nav-link" onClick={() => setIsMenuOpen(false)}>About</NavLink></li>
-              <li><NavLink to="/contact" className="nav-link" onClick={() => setIsMenuOpen(false)}>Contact</NavLink></li>
+              <li><NavScrollLink to="home" setIsMenuOpen={setIsMenuOpen}>Home</NavScrollLink></li>
+              {user && <li><Link to="/dashboard" className="nav-link" onClick={() => setIsMenuOpen(false)}>Dashboard</Link></li>}
+              <li><NavScrollLink to="about" setIsMenuOpen={setIsMenuOpen}>About</NavScrollLink></li>
+              <li><NavScrollLink to="contact" setIsMenuOpen={setIsMenuOpen}>Contact</NavScrollLink></li>
             </ul>
             <div className="navbar-actions">
               {user && userData ? (
@@ -96,19 +132,19 @@ export default function App() {
         </div>
       </nav>
 
-      <main className="page-container">
+      <main>
         <Routes>
           <Route path="/" element={<LandingPage user={user} />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/album/:albumId" element={<PublicAlbumPage />} /> {/* Add this new route */}
+          <Route path="/login" element={<div className="page-container"><LoginPage /></div>} />
+          <Route path="/album/:albumId" element={<div className="page-container"><PublicAlbumPage /></div>} />
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute user={user} loading={loading}>
-                <DashboardPage user={user} userData={userData} />
-              </ProtectedRoute>
+              <div className="page-container">
+                <ProtectedRoute user={user} loading={loading}>
+                  <DashboardPage user={user} userData={userData} />
+                </ProtectedRoute>
+              </div>
             }
           />
         </Routes>
