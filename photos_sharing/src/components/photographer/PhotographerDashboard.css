@@ -82,3 +82,41 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+.dashboard-nav {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 1rem;
+}
+
+.dashboard-nav button {
+  background: none;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #555;
+  border-bottom: 2px solid transparent;
+}
+
+.dashboard-nav button.active {
+  color: #007bff;
+  border-bottom: 2px solid #007bff;
+}
+
+.status-badge {
+  padding: 0.25em 0.6em;
+  font-size: 75%;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+}
+
+.status-sent { background-color: #17a2b8; }
+.status-accepted { background-color: #28a745; }
+.status-declined { background-color: #dc3545; }
+.status-withdrawn { background-color: #6c757d; }

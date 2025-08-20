@@ -1,0 +1,37 @@
+/* src/components/photographer/PhotographerQuotations.css */
+
+.quotations-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.quotations-table th,
+.quotations-table td {
+  padding: 16px 15px;
+  text-align: left;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.quotations-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #343a40;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.quotations-table tbody tr:hover {
+  background-color: #e9ecef;
+}
+
+/* Styles for the action buttons column */
+.quotations-table .action-buttons .btn {
+  margin-right: 8px; /* Add space between buttons */
+}
+
+.quotations-table .action-buttons .btn:last-child {
+  margin-right: 0;
+}

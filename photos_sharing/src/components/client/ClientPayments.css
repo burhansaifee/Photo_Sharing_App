@@ -1,0 +1,40 @@
+/* src/components/client/ClientPayments.css */
+
+.payments-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+}
+
+.payments-table th,
+.payments-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.payments-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+}
+
+.payments-table tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+.amount-due {
+  font-weight: bold;
+  padding: 5px 10px;
+  border-radius: 15px;
+  color: #fff;
+  text-align: center;
+}
+
+.due-positive {
+  background-color: #dc3545; /* Red for amount due */
+}
+
+.due-zero {
+  background-color: #28a745; /* Green for fully paid */
+}
